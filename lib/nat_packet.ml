@@ -177,8 +177,11 @@ let into_cstruct ?(off = 0) ((`IPv4 (ip, transport)):t) full_buffer =
   let ip, more =
     let more_frag = payload_len > transport_payload_len in
     (* more_fragments and offset bits *)
-    let off = (the_ipv4_offset / 8) lor (if more_frag then 0x2000 else 0x0000) in
-    { ip with Ipv4_packet.off }, more_frag
+    (if more_frag then
+       let off = (the_ipv4_offset / 8) lor (if more_frag then 0x2000 else 0x0000) in
+       { ip with Ipv4_packet.off }
+     else
+       ip), more_frag
   in
   match Ipv4_packet.Marshal.into_cstruct ~payload_len:written ip full_buffer with
   | Error s -> Error (fun f -> Fmt.pf f "Error writing IPv4 header: %s" s)
